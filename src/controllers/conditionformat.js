@@ -3050,7 +3050,7 @@ const conditionformat = {
                 }
                 else if(type == "colorGradation"){ //色阶
                     let max = null, min = null, sum = 0, count = 0;
-
+                    let arr = [];
                     for(let s = 0; s < cellrange.length; s++){
                         for(let r = cellrange[s].row[0]; r <= cellrange[s].row[1]; r++){
                             for(let c = cellrange[s].column[0]; c <= cellrange[s].column[1]; c++){
@@ -3061,25 +3061,28 @@ const conditionformat = {
                                 let cell = d[r][c];
 
                                 if(getObjType(cell) == "object" && cell["ct"] != null && cell["ct"].t == "n" && cell.v != null){
+                                    sum += parseFloat(cell.v);
+                                    arr[count] = parseFloat(cell.v);
                                     count++;
-                                    sum += parseInt(cell.v);
 
-                                    if(max == null || parseInt(cell.v) > max){
-                                        max = parseInt(cell.v);
+                                    if(max == null || parseFloat(cell.v) > max){
+                                        max = parseFloat(cell.v);
                                     }
 
-                                    if(min == null || parseInt(cell.v) < min){
-                                        min = parseInt(cell.v);
+                                    if(min == null || parseFloat(cell.v) < min){
+                                        min = parseFloat(cell.v);
                                     }
                                 }
                             }
                         }
                     }
-
+                    
                     if(max != null && min != null){
                         if(format.length == 3){ //三色色阶
-                            let avg = Math.floor(sum / count);
-
+                            let avg = sum / count;
+                            let closest = arr.reduce(function(prev, curr) {
+                                return (Math.abs(curr - avg) < Math.abs(prev - avg) ? curr : prev);
+                              });
                             for(let s = 0; s < cellrange.length; s++){
                                 for(let r = cellrange[s].row[0]; r <= cellrange[s].row[1]; r++){
                                     for(let c = cellrange[s].column[0]; c <= cellrange[s].column[1]; c++){
@@ -3090,7 +3093,7 @@ const conditionformat = {
                                         let cell = d[r][c];
 
                                         if(getObjType(cell) == "object" && cell["ct"] != null && cell["ct"].t == "n" && cell.v != null){
-                                            if(parseInt(cell.v) == min){
+                                            if(parseFloat(cell.v) == min){
                                                 if((r + "_" + c) in computeMap){
                                                     computeMap[r + "_" + c]["cellColor"] = format[2];
                                                 }
@@ -3098,15 +3101,8 @@ const conditionformat = {
                                                     computeMap[r + "_" + c] = { "cellColor": format[2] };
                                                 }
                                             }
-                                            else if(parseInt(cell.v) > min && parseInt(cell.v) < avg){
-                                                if((r + "_" + c) in computeMap){
-                                                    computeMap[r + "_" + c]["cellColor"] = _this.getcolorGradation(format[2], format[1], min, avg, parseInt(cell.v));
-                                                }
-                                                else{
-                                                    computeMap[r + "_" + c] = { "cellColor": _this.getcolorGradation(format[2], format[1], min, avg, parseInt(cell.v)) };
-                                                }
-                                            }
-                                            else if(parseInt(cell.v) == avg){
+                                            else if((parseFloat(cell.v) == avg)
+                                                    ||(parseFloat(cell.v) == closest)){
                                                 if((r + "_" + c) in computeMap){
                                                     computeMap[r + "_" + c]["cellColor"] = format[1];
                                                 }
@@ -3114,20 +3110,28 @@ const conditionformat = {
                                                     computeMap[r + "_" + c] = { "cellColor": format[1] };
                                                 }
                                             }
-                                            else if(parseInt(cell.v) > avg && parseInt(cell.v) < max){
-                                                if((r + "_" + c) in computeMap){
-                                                    computeMap[r + "_" + c]["cellColor"] = _this.getcolorGradation(format[1], format[0], avg, max, parseInt(cell.v));
-                                                }
-                                                else{
-                                                    computeMap[r + "_" + c] = { "cellColor": _this.getcolorGradation(format[1], format[0], avg, max, parseInt(cell.v)) };
-                                                }
-                                            }
-                                            else if(parseInt(cell.v) == max){
+                                            else if(parseFloat(cell.v) == max){
                                                 if((r + "_" + c) in computeMap){
                                                     computeMap[r + "_" + c]["cellColor"] = format[0];
                                                 }
                                                 else{
                                                     computeMap[r + "_" + c] = { "cellColor": format[0] };
+                                                }
+                                            }
+                                            else if(parseFloat(cell.v) > min && parseFloat(cell.v) < closest){
+                                                if((r + "_" + c) in computeMap){
+                                                    computeMap[r + "_" + c]["cellColor"] = _this.getcolorGradation(format[2], format[1], min, avg, parseFloat(cell.v));
+                                                }
+                                                else{
+                                                    computeMap[r + "_" + c] = { "cellColor": _this.getcolorGradation(format[2], format[1], min, avg, parseFloat(cell.v)) };
+                                                }
+                                            }
+                                            else if(parseFloat(cell.v) > closest && parseFloat(cell.v) < max){
+                                                if((r + "_" + c) in computeMap){
+                                                    computeMap[r + "_" + c]["cellColor"] = _this.getcolorGradation(format[1], format[0], avg, max, parseFloat(cell.v));
+                                                }
+                                                else{
+                                                    computeMap[r + "_" + c] = { "cellColor": _this.getcolorGradation(format[1], format[0], avg, max, parseFloat(cell.v)) };
                                                 }
                                             }
                                         }
@@ -3146,7 +3150,7 @@ const conditionformat = {
                                         let cell = d[r][c];
 
                                         if(getObjType(cell) == "object" && cell["ct"] != null && cell["ct"].t == "n" && cell.v != null){
-                                            if(parseInt(cell.v) == min){
+                                            if(parseFloat(cell.v) == min){
                                                 if((r + "_" + c) in computeMap){
                                                     computeMap[r + "_" + c]["cellColor"] = format[1];
                                                 }
@@ -3154,15 +3158,15 @@ const conditionformat = {
                                                     computeMap[r + "_" + c] = { "cellColor": format[1] };
                                                 }
                                             }
-                                            else if(parseInt(cell.v) > min && parseInt(cell.v) < max){
+                                            else if(parseFloat(cell.v) > min && parseFloat(cell.v) < max){
                                                 if((r + "_" + c) in computeMap){
-                                                    computeMap[r + "_" + c]["cellColor"] = _this.getcolorGradation(format[1], format[0], min, max, parseInt(cell.v));
+                                                    computeMap[r + "_" + c]["cellColor"] = _this.getcolorGradation(format[1], format[0], min, max, parseFloat(cell.v));
                                                 }
                                                 else{
-                                                    computeMap[r + "_" + c] = { "cellColor": _this.getcolorGradation(format[1], format[0], min, max, parseInt(cell.v)) };
+                                                    computeMap[r + "_" + c] = { "cellColor": _this.getcolorGradation(format[1], format[0], min, max, parseFloat(cell.v)) };
                                                 }
                                             }
-                                            else if(parseInt(cell.v) == max){
+                                            else if(parseFloat(cell.v) == max){
                                                 if((r + "_" + c) in computeMap){
                                                     computeMap[r + "_" + c]["cellColor"] = format[0];
                                                 }
